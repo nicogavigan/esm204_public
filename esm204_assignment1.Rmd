@@ -1,0 +1,266 @@
+---
+title: "ESM 204 Assignment 1"
+author: "Nico Gavigan"
+date: "January 25, 2025"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(pracma)
+library(tidyverse)
+library(ggplot2)
+```
+
+## Part 1
+
+1.a: Write a simple program that counts from 1 to 10 by increments of 0.5. Print out the results.
+
+```{r}
+seq <- seq(1, 10, by = 0.5)
+
+print(seq)
+```
+
+1.b: Write a custom function. Your function should have three inputs (X, a, and b) and one
+output (Y). The function should calculate Y = aX + b. Once you have created it, call your
+function for the values X=5, b=10, and a=3. What value of Y did you get? Confirm
+algebraically that it is correct.
+
+```{r}
+fun_b <- function(x, b, a){
+  y = a*x + b 
+  return(y)
+}
+
+fun_b(x = 5, b = 10, a = 3)
+```
+
+
+1.c: Build a dataframe. Your dataframe is going to call your function from above. We are
+going to fix a=3 and b=10, and we would like the dataframe to evaluate the function for
+integer values of X between 0 and 10. The columns of your dataframe should be: a, b, X,
+and Y. Print the resulting dataframe.
+
+```{r}
+fun_c <- function(x){
+  z=fun_b(x, a=3, b=10)
+  return(z)
+}
+
+y_values <- fun_c(x=0:10)
+x_values <- 0:10
+a <- 3
+b <- 10
+
+
+df_1 <- data.frame(a, b, y = y_values, x = x_values)
+print(df_1)
+```
+
+1.d: Plot using your dataframe. Use ggplot to plot Y (vertical axis) against X (horizontal
+axis) from your dataframe.
+
+```{r}
+plot_d <- ggplot(data = df_1, aes(x = x, y = y)) +
+  geom_point() +
+  theme_bw()
+
+plot_d
+```
+
+1.e.i: 
+```{r}
+fun1 <- function(x, a1, b1){
+  y = a1*x + b1 
+  return(y)
+}
+
+fun2 <- function(x, a2, b2){
+  y = a2*x + b2 
+  return(y)
+}
+
+fun3 <- function(x, a1, b1, a2, b2){
+  z=fun1(x, a1, b1)-fun2(x, a2, b2)
+  return(z)
+}
+
+a1 <- -2
+a2 <- 3
+b1 <- 100
+b2 <- 0
+
+result_e <- fzero(function(x) fun3(x, a1, b1, a2, b2), c(-100, 100))$x
+print(result_e)
+```
+
+## Part 2
+
+2.a: Equilibrium price and quantity of peanut butter 
+
+Peanut butter equilibrium price: 170 credits per jar 
+Peanut butter equilibrium quantity: 3300 jars
+```{r}
+pb_dd <- function(q, a1, b1){
+  p = a1*q + b1
+  return(p)
+}
+
+pb_ss <- function(q, a2, b2){
+  p = a2*q + b2 
+  return(p)
+}
+
+pb_eq <- function(q, a1, b1, a2, b2){
+  z = pb_dd(q, a1, b1) - pb_ss(q, a2, b2)
+  return(z)
+}
+
+a1 <- -0.1
+a2 <- 0.05
+b1 <- 500
+b2 <- 5
+
+pb_eq_quantity <- fzero(function(q) pb_eq(q, a1, b1, a2, b2),
+                     c(-10000, 10000))$x
+print(pb_eq_quantity)
+
+pb_eq_price <- pb_dd(q = pb_eq_quantity, a1, b1)
+print(pb_eq_price)
+```
+2.1.b: Producer and Consumer Surplus 
+
+Producer surplus = 544,500 credits 
+Consumer surplus = 272,350 credits
+```{r}
+producer_surplus = 0.5*3300*330
+
+consumer_surplus = 0.5*165*3300
+```
+
+2.1.c: A very large new food bank in New York City enters the market, with an individual
+demand for peanut butter given by P = 400 - 2Q. Draw the new aggregate demand curve
+in this market. What is the new equilibrium price?
+
+New equilibrium price = 173.8 credits per jar
+
+```{r}
+new_dd <- function(p, a3, b3){
+  q = (p - b3) / a3
+  return(q)
+}
+
+pb_dd_q <- function(p, a1, b1){
+  q = (p - b1) / a1
+  return(q)
+}
+
+pb_ss_q <- function(p, a2, b2){
+  q = (p - b2) / a2
+  return(q)
+}
+
+agg_dd <- function(p, a1, b1, a3, b3){
+  z = new_dd(p, a3, b3) + pb_dd_q(p, a1, b1)
+  return(z)
+}
+
+new_eq <- function(p, a1, b1, a3, b3, a2, b2){
+  y = agg_dd(p, a1, b1, a3, b3) - pb_ss_q(p, a2, b2)
+  return(y)
+}
+
+a3 <- -2
+b3 <- 400
+
+new_eq_p <- fzero(function(p) new_eq(p, a1, b1, a3, b3, a2, b2), c(-1000, 1000))$x
+
+print(new_eq_p)
+
+new_eq_q <- agg_dd(p = new_eq_p, a1, b1, a3, b3)
+print(new_eq_q)
+
+```
+2.d: 
+The social costs of the carbon emissions generated due to fossil fuel intensive transport should change the amount of peanut butter traded by food banks. However, the current market does not disincentivize carbon emissions in a way that directly affects the price of products (ie. a carbon tax). This externality causes direct impacts on individuals, ecosystems, and planetary health. By translating these impacts into a tax, the price of peanutbutter would increase depending on the carbon emissions associated with its production and transportation. This could also create market advantages to small, local producers who produce lower carbon emissions.
+
+
+## Part 3
+
+3.a.1: 9000 cars will be sold back to the state under this program.
+```{r}
+old_car_ss <- function(p, q){
+  q = (p - 200) / 0.2
+  return(q)
+}
+
+old_car_ss(2000, q_c) 
+```
+3.a.ii: Elasticity of supply: 1.11
+
+```{r}
+car_eq_p <- 2000
+car_eq_q <- old_car_ss(2000)
+
+dq_dp <- function(){
+  return(1 / 0.2)
+}
+
+car_elas <- function(dq_dp, car_eq_p, car_eq_q){
+  e = dq_dp() * (car_eq_p/car_eq_q)
+  return(e)
+}
+
+car_elas(dq_dp, car_eq_p, car_eq_q)
+```
+
+3.a.iii: What are the benefits of this policy to owners of old cars?
+
+The benefits of this policy to owners of old cars is equal to $1,937,462
+```{r}
+area1 = 2000*1973
+
+supply <- function(q){
+  y = 200+0.2*(q^1.2)
+  return(y)
+}
+
+area2 = integral(supply, xmin=0, xmax=1973)
+p_surp = area1-area2
+p_surp
+```
+
+
+This policy allows owners of cars who, in the free market, would be selling their cars at market price. The government program sets a fixed price of $2000, which is higher than the free market rate. This program also provides a guaranteed buyer to the sellers, which increases the accessibility of selling their cars.
+
+
+3.a.iv: What is the cost of this program to taxpayers (who fund the government
+payments)?
+
+The total cost to taxpayers is $18,000,000.
+```{r}
+total_cost <- car_eq_p * car_eq_q
+total_cost
+```
+
+3.b.i: The socially optimal number of cars to remove = 964
+3.b.ii: The optimal price is $961.90
+```{r}
+mb <- function(q) {
+  1000 - 0.01 * (q^1.2)
+}
+
+mc <- function(q) {
+  200 + 0.2 * (q^1.2)
+}
+  
+eq_q <- function(q) {
+  mc(q) - mb(q)
+}
+
+op_q <- uniroot(eq_q, lower = 0, upper = 2000)$root
+op_q
+
+op_p <- mb(op_q)
+op_p
+```
